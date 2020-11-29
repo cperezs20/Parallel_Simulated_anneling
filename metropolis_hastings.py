@@ -46,7 +46,7 @@ def is_shape_allowed(a):
     c = absolute_coordinates(a)
     return unique_rows(c).shape == c.shape #True if shape is allowed, i.e. the polymer does not cross
 
-"""
+
 def check_allowed_neighbors(l):
     return [neighbor for neighbor in l if is_shape_allowed(neighbor)]
 """
@@ -71,7 +71,7 @@ def check_allowed_neighbors(l, iterator):
         if allowed_shape:
             neighbor_list.append(neighbor)
     return neighbor_list
-
+"""
     
 def number_of_contacts(a, matrix_l):
     d = 0
@@ -112,8 +112,9 @@ def count_energy(microstate, delta, matrix_l):
 
 def create_new_microstate(microstate, Lmacierzy):
     neighbors1 = neighbors(microstate, Lmacierzy)
-    iterator = itertools.combinations(range(16), 2)
-    neighbors_allowed = check_allowed_neighbors(neighbors1, list(iterator))
+    #iterator = itertools.combinations(range(16), 2)
+    #neighbors_allowed = check_allowed_neighbors(neighbors1, list(iterator))
+    neighbors_allowed = check_allowed_neighbors(neighbors1
     m = np.random.random_integers(0, len(neighbors_allowed)-1)
     return len(neighbors_allowed), neighbors_allowed[m]
     

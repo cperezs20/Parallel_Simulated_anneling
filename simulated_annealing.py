@@ -10,7 +10,7 @@ start = time()
 l = "HPPPHHPPHPHHHHHH"
 #l= "HPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPH"
 
-K = 100       #number of steps of the Metropolis-Hastings algorithm
+K = 1       #number of steps of the Metropolis-Hastings algorithm
 kb = 1          #Boltzman constant 
 Tmax = 1        #initial temperature
 Tmin = 0.15     #final temperature
