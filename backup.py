@@ -6,7 +6,27 @@ import numba as nb
 import numpy as np
 import itertools
 
+def generate_neighbors(macierz_przek, a):
+    """
+    for the rotate matrix generating all possible next microstates
+    """
+    s=[]
+    ma = a * macierz_przek
+    for i in range(a.shape[0]):
+        s.append(np.vstack((a[:i, :],
+                        ma[i:, :])))
+    return s
 
+
+def neighbors(a, rotate_matrices):
+    """
+    generating all possible next microstates for microstate a
+    """
+    l=[]
+    for macierz_przek in rotate_matrices:
+        s = generate_neighbors(macierz_przek, a)
+        l += s
+    return l
 
 
 def absolute_coordinates(a): 
@@ -96,37 +116,6 @@ def create_new_microstate(microstate,Lmacierzy):
     m = np.random.random_integers(0,len(neighbors_allowed)-1)
     return len(neighbors_allowed),neighbors_allowed[m]
     
-
-def generate_neighbors(macierz_przek, a):
-    """
-    for the rotate matrix generating all possible next microstates
-    """
-    s=[]
-    ma = a * macierz_przek
-    for i in range(a.shape[0]):
-        s.append(np.vstack((a[:i, :],
-                        ma[i:, :])))
-    return s
-
-
-def neighbors(a, rotate_matrices):
-    """
-    generating all possible next microstates for microstate a
-    """
-    l=[]
-    for macierz_przek in rotate_matrices:
-        s = generate_neighbors(macierz_przek, a)
-        l += s
-    return l
-
-
-def create_new_microstate(microstate,rot_matrix):
-    neighbors = []
-    for matrix in rot_matrix:
-        s = generate_neighbors(matrix, a)
-        l += s
-
-
 
 def Metropolis_Hastings(K,T,microstateX,rotate_matrices,delta,matrix_l):
     
