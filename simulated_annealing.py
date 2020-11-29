@@ -1,54 +1,42 @@
-from metropolis_hastings import *
-from init_and_save import *
+import numpy as np
+from metropolis_hastings import Metropolis_Hastings
+from init_and_save import simulation2pdb, initialization
 from time import time
 
-start= time()
+start = time()
 
-def simulated_annealing(Tmax,Tmin,delta,K,T,microstateX,rotate_matrices,matrix_l,kb,alfa):
+## polymer based on HP model (hydrophobic-polar protein folding model)
+#l="PHPPHPPHHPPHHPPHPPHP"
+l = "HPPPHHPPHPHHHHHH"
+#l= "HPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPH"
+
+K = 100       #number of steps of the Metropolis-Hastings algorithm
+kb = 1          #Boltzman constant 
+Tmax = 1        #initial temperature
+Tmin = 0.15     #final temperature
+delta = 1       #constant used during calculating energy for each microstate
+alfa = 0.05     #temperature will decrease by alfa
+
+start_microstate, rotation_matrices, matrix_polymer = initialization(l)
+
+T = Tmax
+simulation = []
+
+while T>=Tmin:
     
-    T = Tmax
-    simulation = []
-    
-    while T>=Tmin:
-      
-        print("Temp:",T)
-        
-        aM, number_of_contacts, energy = Metropolis_Hastings(K,T,microstateX,rotate_matrices,delta,matrix_l)
-        microstateX = aM[-1] #last microstate from previous step will be the first of current step
+    print("Temp:",T)
 
-        for j in range(len(aM)):
-            simulation.append( (T, aM[j], number_of_contacts[j], energy[j]) ) #temp, matrix, number_of_contacts, energy
+    aM, number_of_contacts, energy = Metropolis_Hastings(K, T, start_microstate, rotation_matrices,
+                                                         delta,matrix_polymer)
+    start_microstate = aM[-1] #last microstate from previous step will be the first of current step
 
-        T-=alfa
+    for j in range(len(aM)):
+        simulation.append((T, aM[j], number_of_contacts[j], energy[j])) #temp, matrix, number_of_contacts, energy
 
-    return simulation
+    T -= alfa #T = T - alfa
+    T = np.round(T, 5)
 
+simulation2pdb(simulation, matrix_polymer, "output/trajectory_sa.pdb")
 
-  
-if __name__ == '__main__':
-
-    ## polymer based on HP model (hydrophobic-polar protein folding model)
-    #l="PHPPHPPHHPPHHPPHPPHP"
-    l = "HPPPHHPPHPHHHHHH"
-    #l= "HPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPH"
-
-
-    K = 10000       #number of steps of the Metropolis-Hastings algorithm
-    kb = 1          #Boltzman constant 
-    Tmax = 1        #initial temperature
-    Tmin = 0.15     #final temperature
-    delta = 1       #constant used during calculating energy for each microstate
-    alfa = 0.05     #temperature will decrease by alfa
-
-    start_microstate, rotation_matrices, matrix_polymer = initialization(l)
-
-    simulation = simulated_annealing(Tmax,Tmin,delta,K,Tmax,start_microstate,rotation_matrices,matrix_polymer,kb,alfa)
-    simulation2pdb(simulation, matrix_polymer, "output/trajectory_sa.pdb")
-
-
-    kb = 1          # Boltzman constant 
-    Tmax = 1        # max temperature
-    Tmin = 0.15     # min temperature
-    delta = 1       # constant used during calculating energy for each microstate
 end = time()
-print(f'It took {end - start} seconds!') 
+print(f'It took {end - start} seconds!')

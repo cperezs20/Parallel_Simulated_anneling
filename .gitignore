@@ -1,7 +1,7 @@
 __pycache__/
 output/
-
+.vscode/ 
+replica_exchange.py
 *.pyc
 *.png
 *.Result
-
