@@ -91,41 +91,44 @@ def count_energy(microstate, delta, matrix_l):
     
 
 def create_new_microstate(microstate,Lmacierzy):
-    neighbors1 = neighbors(microstate,Lmacierzy)
+    neighbors1 = neighbors(microstate,nb.typed.List(Lmacierzy))
     neighbors_allowed = check_allowed_neighbors(neighbors1)
     m = np.random.random_integers(0,len(neighbors_allowed)-1)
     return len(neighbors_allowed),neighbors_allowed[m]
     
 
-def generate_neighbors(macierz_przek, a):
-    """
-    for the rotate matrix generating all possible next microstates
-    """
-    s=[]
-    ma = a * macierz_przek
-    for i in range(a.shape[0]):
-        s.append(np.vstack((a[:i, :],
-                        ma[i:, :])))
-    return s
+#def generate_neighbors(macierz_przek, a): #a = microstate
+#    """
+#    for the rotate matrix generating all possible next microstates
+#    """
+#    s=[]
+#    ma = a * macierz_przek
+#    for i in range(a.shape[0]):
+#        s.append(np.vstack((a[:i, :],
+#                        ma[i:, :])))
+#    return s
 
 
-def neighbors(a, rotate_matrices):
-    """
-    generating all possible next microstates for microstate a
-    """
-    l=[]
-    for macierz_przek in rotate_matrices:
-        s = generate_neighbors(macierz_przek, a)
-        l += s
-    return l
+#def neighbors(a, rotate_matrices):
+#    """
+#    generating all possible next microstates for microstate a
+#    """
+#    l=[]
+#    for macierz_przek in rotate_matrices:
+#        s = generate_neighbors(macierz_przek, a) #a = microstate
+#        l += s
+#    return l
 
-
-def create_new_microstate(microstate,rot_matrix):
-    neighbors = []
-    for matrix in rot_matrix:
-        s = generate_neighbors(matrix, a)
-        l += s
-
+@nb.jit(nopython=True)
+def neighbors(microstate,rot_matrices):
+    neighbors_set = list()
+    for rot_matrix in rot_matrices:
+        ma = microstate * rot_matrix
+        neighbors = list()
+        for i in range(microstate.shape[0]):
+            neighbors.append(np.vstack((microstate[:i, :], ma[i:, :])))
+        neighbors_set.extend(neighbors)
+    return neighbors_set
 
 
 def Metropolis_Hastings(K,T,microstateX,rotate_matrices,delta,matrix_l):
@@ -149,7 +152,7 @@ def Metropolis_Hastings(K,T,microstateX,rotate_matrices,delta,matrix_l):
         energyY = count_energy(microstateY,delta,matrix_l)
         n_of_contacts_Y = how_many_contacts_opposite(matrix_l,microstateY)
         
-        n_neighborsY,microstateZ = create_new_microstate(microstateY,rotate_matrices) #microstate Z is not needed to further calculations
+        n_neighborsY,_ = create_new_microstate(microstateY,rotate_matrices) #microstate Z is not needed to further calculations
         
         prop_accept_microstateY = (-energyY/T) - np.math.log(n_neighborsY) - (-energyX/T) + np.math.log(n_neighborsX)
         random_number = np.math.log(np.random.random_sample(1)[0]) #e.g.array([ 0.25290701])
