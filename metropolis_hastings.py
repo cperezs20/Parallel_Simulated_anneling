@@ -5,7 +5,7 @@ Metropolis-Hastings algorithm implementation
 import numba as nb
 import numpy as np
 import itertools
-
+from multiprocessing import Pool
 
 
 
@@ -97,37 +97,38 @@ def create_new_microstate(microstate,Lmacierzy):
     return len(neighbors_allowed),neighbors_allowed[m]
     
 
-#def generate_neighbors(macierz_przek, a): #a = microstate
-#    """
-#    for the rotate matrix generating all possible next microstates
-#    """
-#    s=[]
-#    ma = a * macierz_przek
-#    for i in range(a.shape[0]):
-#        s.append(np.vstack((a[:i, :],
-#                        ma[i:, :])))
-#    return s
+# def generate_neighbors(macierz_przek, a): #a = microstate
+#     """
+#     for the rotate matrix generating all possible next microstates
+#     """
+#     s=[]
+#     ma = a * macierz_przek
+#     for i in range(a.shape[0]):
+#         s.append(np.vstack((a[:i, :],
+#                         ma[i:, :])))
+#     return s
 
 
-#def neighbors(a, rotate_matrices):
-#    """
-#    generating all possible next microstates for microstate a
-#    """
-#    l=[]
-#    for macierz_przek in rotate_matrices:
-#        s = generate_neighbors(macierz_przek, a) #a = microstate
-#        l += s
-#    return l
+# def neighbors(a, rotate_matrices):
+#     """
+#     generating all possible next microstates for microstate a
+#     """
+#     l=[]
+#     for macierz_przek in rotate_matrices:
+#         s = generate_neighbors(macierz_przek, a) #a = microstate
+#         l += s
+#     return l
+
 
 @nb.jit(nopython=True)
 def neighbors(microstate,rot_matrices):
-    neighbors_set = list()
+    neighbors_set = np.array([], dtype=np.float32)
     for rot_matrix in rot_matrices:
         ma = microstate * rot_matrix
-        neighbors = list()
+        neighbors = np.array([], dtype=np.float32)
         for i in range(microstate.shape[0]):
-            neighbors.append(np.vstack((microstate[:i, :], ma[i:, :])))
-        neighbors_set.extend(neighbors)
+            neighbors = np.hstack(neighbors, np.vstack((microstate[:i, :], ma[i:, :])))
+        neighbors_set = np.vstack(neighbors_set, neighbors)
     return neighbors_set
 
 
