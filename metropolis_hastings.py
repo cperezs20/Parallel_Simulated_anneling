@@ -91,44 +91,54 @@ def count_energy(microstate, delta, matrix_l):
     
 
 def create_new_microstate(microstate,Lmacierzy):
-    neighbors1 = neighbors(microstate,nb.typed.List(Lmacierzy))
+    neighbors1 = neighbors(microstate, Lmacierzy)
+    #neighbors2 = find_neighbors(microstate, np.array(Lmacierzy))
     neighbors_allowed = check_allowed_neighbors(neighbors1)
     m = np.random.random_integers(0,len(neighbors_allowed)-1)
     return len(neighbors_allowed),neighbors_allowed[m]
     
 
-# def generate_neighbors(macierz_przek, a): #a = microstate
-#     """
-#     for the rotate matrix generating all possible next microstates
-#     """
-#     s=[]
-#     ma = a * macierz_przek
-#     for i in range(a.shape[0]):
-#         s.append(np.vstack((a[:i, :],
-#                         ma[i:, :])))
-#     return s
+def generate_neighbors(macierz_przek, a): #a = microstate
+    """
+    for the rotate matrix generating all possible next microstates
+    """
+    s=[]
+    ma = np.dot(a, macierz_przek)
+    for i in range(a.shape[0]):
+        s.append(np.vstack((a[:i, :],
+                        ma[i:, :])))
+    return s
 
 
-# def neighbors(a, rotate_matrices):
-#     """
-#     generating all possible next microstates for microstate a
-#     """
-#     l=[]
-#     for macierz_przek in rotate_matrices:
-#         s = generate_neighbors(macierz_przek, a) #a = microstate
-#         l += s
-#     return l
+def neighbors(a, rotate_matrices):
+    """
+    generating all possible next microstates for microstate a
+    """
+    l=[]
+    for macierz_przek in rotate_matrices:
+        s = generate_neighbors(macierz_przek, a) #a = microstate
+        l += s
+    return l
 
+@nb.njit(nopython=True)
+def find_neighbors(microstate, rot_matrices):
+    """
+    Find the neighbors for a given microstate
 
-@nb.jit(nopython=True)
-def neighbors(microstate,rot_matrices):
-    neighbors_set = np.array([], dtype=np.float32)
-    for rot_matrix in rot_matrices:
-        ma = microstate * rot_matrix
-        neighbors = np.array([], dtype=np.float32)
-        for i in range(microstate.shape[0]):
-            neighbors = np.hstack(neighbors, np.vstack((microstate[:i, :], ma[i:, :])))
-        neighbors_set = np.vstack(neighbors_set, neighbors)
+    Parameters:
+    -----------
+    microstate : ndarray
+        A matrix with the current microstate
+    rot_matrices : list
+        A list with the rotation matrices
+    """
+
+    neighbors_set = np.empty((microstate.shape[0]*len(rot_matrices), microstate.shape[0],
+                         microstate.shape[1]), dtype=np.float32)
+    for i in range(rot_matrices.shape[0]):
+        ma = np.dot(microstate.astype(np.float32), rot_matrices[i].astype(np.float32))
+        for j in range(microstate.shape[0]):
+            neighbors_set[i*microstate.shape[0]+j, :, :] = np.vstack((microstate[:j, :], ma[j:, :]))
     return neighbors_set
 
 

@@ -18,7 +18,7 @@ start = time()
 SEQUENCE = "HPPPHHPPHPHHHHHH"
 #SEQUENCE= "HPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPH"
 
-K = 100       #number of steps of the Metropolis-Hastings algorithm
+K = 10       #number of steps of the Metropolis-Hastings algorithm
 KB = 1          #Boltzman constant
 TMAX = 1        #initial temperature
 TMIN = 0.15     #final temperature
@@ -45,6 +45,7 @@ while T >= TMIN:
     T -= ALPHA #T = T - alfa
     T = np.round(T, 5)
 
+print(simulation, matrix_polymer)
 simulation2pdb(simulation, matrix_polymer, "output/trajectory_sa.pdb")
 
 end = time()
