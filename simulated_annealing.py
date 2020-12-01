@@ -45,7 +45,6 @@ while T >= TMIN:
     T -= ALPHA #T = T - alfa
     T = np.round(T, 5)
 
-print(simulation, matrix_polymer)
 simulation2pdb(simulation, matrix_polymer, "output/trajectory_sa.pdb")
 
 end = time()
