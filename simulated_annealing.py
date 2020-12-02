@@ -35,7 +35,7 @@ while T >= TMIN:
     print("Temp:", T)
 
     aM, number_of_contacts, energy = metropolis_hasting(K, T, start_microstate, rotation_matrices,
-                                                         DELTA, matrix_polymer)
+                                                        DELTA, matrix_polymer)
     start_microstate = aM[-1] #last microstate from previous step will be the first of current step
 
     for j, _ in enumerate(aM):
@@ -45,7 +45,7 @@ while T >= TMIN:
     T -= ALPHA #T = T - alfa
     T = np.round(T, 5)
 
-simulation2pdb(simulation, matrix_polymer, "output/trajectory_sa.pdb")
+simulation2pdb(simulation, matrix_polymer, "output/trajectory_sa_par.pdb")
 
 end = time()
 print(f'It took {end - start} seconds!')

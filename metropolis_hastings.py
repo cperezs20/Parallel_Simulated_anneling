@@ -125,10 +125,12 @@ def calc_energy(microstate, delta, seq_matrix):
     energy : ndarray
         Energy of the given microstate
     """
+
+    print(num_adjacent_h(seq_matrix), num_contacts(microstate, seq_matrix))
     n_contact = num_adjacent_h(seq_matrix)-num_contacts(microstate, seq_matrix)
     energy = -1*delta*n_contact
 
-    return float(n_contact), energy
+    return n_contact, energy
 
 
 @nb.njit
@@ -197,7 +199,6 @@ def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta,
     while i < steps:
 
         n_contacts_x, energy_x = calc_energy(microstate_x, delta, matrix_l)
-        print(n_contacts_x)
 
         n_neighbors_x, microstate_y = create_new_microstate(microstate_x, rotate_matrices)
 
