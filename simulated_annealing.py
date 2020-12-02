@@ -7,7 +7,7 @@ Then it saves the resulta into a pdb file
 
 from time import time
 import numpy as np
-from metropolis_hastings import Metropolis_Hastings
+from metropolis_hastings import metropolis_hasting
 from init_and_save import simulation2pdb, initialization
 
 
@@ -34,7 +34,7 @@ while T >= TMIN:
 
     print("Temp:", T)
 
-    aM, number_of_contacts, energy = Metropolis_Hastings(K, T, start_microstate, rotation_matrices,
+    aM, number_of_contacts, energy = metropolis_hasting(K, T, start_microstate, rotation_matrices,
                                                          DELTA, matrix_polymer)
     start_microstate = aM[-1] #last microstate from previous step will be the first of current step
 

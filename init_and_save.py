@@ -37,7 +37,7 @@ def initialization(amino_seq):
     --------
     init_microstate : ndarray
         Array with the initial microstate
-    ndarray
+    rotation_matrices : ndarray
         Array with the rotations at 180, 90 and 270 degrees
     matrix_polymer : ndarray
         Aminoacid sequence as matrix
@@ -50,11 +50,12 @@ def initialization(amino_seq):
     init_microstate = np.array((1, 0)*(len(amino_seq)-2)).reshape((len(amino_seq)-2, 2))
 
     #Generating rotations matrices for 90, 180 and 270 degrees
-    m90 = rotation_matrix(np.math.pi/2.0)
-    m180 = rotation_matrix(np.math.pi)
-    m270 = rotation_matrix((3.0/2.0)*np.math.pi)
+    rotation_matrices = np.empty((3,2,2))
+    rotation_matrices[0] = rotation_matrix(np.math.pi/2.0)
+    rotation_matrices[1] = rotation_matrix(np.math.pi)
+    rotation_matrices[2] = rotation_matrix((3.0/2.0)*np.math.pi)
 
-    return init_microstate, [m180, m90, m270], matrix_polymer
+    return init_microstate, rotation_matrices, matrix_polymer
 
 
 def matrix2coord(matrix):
@@ -74,54 +75,35 @@ def matrix2coord(matrix):
     return matrix.cumsum(axis=0)
 
 
-# def simulation2pdb(simulation, hp_polymer, output_path="output/trajectory_sa.pdb"):
-#     """
-#     Converts results from simulation into a pdb file
+def simulation2pdb(simulation, hp_polymer, output_path="output/trajectory_sa.pdb"):
+    """
+    Converts results from simulation into a pdb file
 
-#     Parameters:
-#     -----------
-#     simulation : list
-#         Results from the simulation (simulated annealing)
-#     hp_polymer : ndarray
-#         Aminoacid sequence
-#     output_path : str (optional)
-#         Path to save the output file
-#     """
+    Parameters:
+    -----------
+    simulation : list
+        Results from the simulation (simulated annealing)
+    hp_polymer : ndarray
+        Aminoacid sequence
+    output_path : str (optional)
+        Path to save the output file
+    """
 
-#     fid = open(output_path, "w")
+    fid = open(output_path, "w")
 
-#     aa_type = ["LYS" if x=="P" else "ALA" for x in hp_polymer]
+    aa_type = ["LYS" if x=="P" else "ALA" for x in hp_polymer]
 
-#     for i, _ in enumerate(simulation):
-#         _, matrix, number_of_contacts, _ = simulation[i][0], simulation[i][1],\
-#                                            simulation[i][2], simulation[i][3]
-#         fid.write("MODEL " + str(i + 1) + "\n")
-#         fid.write("COMMENT:	nOfContacts=" + str(number_of_contacts)+"\n")
+    for i, _ in enumerate(simulation):
+        _, matrix, number_of_contacts, _ = simulation[i][0], simulation[i][1],\
+                                           simulation[i][2], simulation[i][3]
+        fid.write("MODEL " + str(i + 1) + "\n")
+        fid.write("COMMENT:	nOfContacts=" + str(number_of_contacts)+"\n")
 
-#         coords = matrix2coord(matrix)
-#         for j in range(coords.shape[0]):
-#             list_coords = coords[j].tolist()[0]
-#             fid.write("ATOM      "+str(j)+"  CA  " + aa_type[j] + "   "+str(i)+"  A     "\
-#                       + str(float(list_coords[0])) + "   " + str(float(list_coords[1])) +\
-#                       "   0.000\n")
-#         fid.write("ENDMDL\n")
-#     fid.close()
-
-def simulation2pdb(simulation, hp_polymer, output_path):
-    
-    f = open(output_path, "w")
-    aa_type = ["LYS" if x=="P" else "ALA" for x in hp_polymer.tostring() ]
-    
-    for m in range(len(simulation)):
-        temp, matrix, number_of_contacts, energy = simulation[m][0], simulation[m][1], simulation[m][2], simulation[m][3]
-        f.write("MODEL " + str(m + 1) + "\n")
-        f.write("COMMENT:	nOfContacts=" + str(number_of_contacts)+"\n")
-      
         coords = matrix2coord(matrix)
-        for i in range(coords.shape[0]):
-            c = coords[i].tolist()[0]
-            print(c)
-            f.write("ATOM      "+str(i)+"  CA  " + aa_type[i] + "   "+str(i)+"  A     " + str(float(c[0])) + "   " + str(float(c[1])) + "   0.000\n")
-        f.write("ENDMDL\n")
-    f.close()
-    
+        for j in range(coords.shape[0]):
+            list_coords = coords[j].tolist()
+            fid.write("ATOM      "+str(j)+"  CA  " + aa_type[j] + "   "+str(i)+"  A     "\
+                      + str(float(list_coords[0])) + "   " + str(float(list_coords[1])) +\
+                      "   0.000\n")
+        fid.write("ENDMDL\n")
+    fid.close()
