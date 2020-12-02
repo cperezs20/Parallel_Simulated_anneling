@@ -6,39 +6,7 @@ import numba as nb
 import numpy as np
 
 
-# @nb.njit(fastmath=True, parallel=True)
-def get_allowed_neighborhs(microstate):
-    """
-    This funcion gets the allowed neighbors for a given
-    polymer matrix
-
-    Parameters:
-    -----------
-    aminoacid_matrix : ndarray
-        Numpy array containing the polymer matrix
-
-    Returns:
-    --------
-    allowed_neighbors : ndarray
-        Array with the selected neigborhs
-    """
-
-    allowed_neighborhs = []
-    for i in range(microstate.shape[0]):
-        complete_matrix = np.vstack((np.array([[0, 0], [1, 0]]), microstate[i]))
-        coord_matrix = np.empty(complete_matrix.shape)
-        for j in range(complete_matrix.shape[1]):
-            coord_matrix[:, j] = np.cumsum(complete_matrix[:, j])
-        x_mat = np.random.rand(coord_matrix.shape[1])
-        y_mat = coord_matrix.dot(x_mat)
-        unique = np.unique(y_mat)
-        if unique.shape[0] == coord_matrix.shape[0]:
-            allowed_neighborhs.append(microstate[i])
-
-    return allowed_neighborhs
-
-
-# @nb.njit(fastmath=True)
+@nb.njit(fastmath=True)
 def num_adjacent_h(seq_matrix):
     """
     Function to count occurences where two H are adjacent
@@ -101,11 +69,12 @@ def num_contacts(microstate, seq_matrix):
         y_mat = aux.dot(x_mat)
         m_wspolna = np.unique(y_mat)
         acum += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
+    print(acum)
     return acum
 
 
 # @nb.njit(fastmath=True)
-def calc_energy(microstate, delta, seq_matrix):
+def calc_energy(microstate, delta, seq_matrix, adj_h):
     """
     Function to compute the energy of a given microstate
 
@@ -124,10 +93,64 @@ def calc_energy(microstate, delta, seq_matrix):
         Energy of the given microstate
     """
 
-    n_contact = num_adjacent_h(seq_matrix)-num_contacts(microstate, seq_matrix)
+    n_contact = adj_h-num_contacts(microstate, seq_matrix)
     energy = -1*delta*n_contact
 
     return n_contact, energy
+
+# @nb.njit(fastmath=True, parallel=True)
+def find_neighbors(microstate, rot_matrices):
+    """
+    Find the neighbors for a given microstate
+
+    Parameters:
+    -----------
+    microstate : ndarray
+        A matrix with the current microstate
+    rot_matrices : list
+        A list with the rotation matrices
+    """
+
+    neighbors_set = np.empty((microstate.shape[0]*len(rot_matrices), microstate.shape[0],
+                         microstate.shape[1]), dtype=np.float32)
+    for i in range(rot_matrices.shape[0]):
+        micro_rot = np.dot(microstate.astype(np.float32), rot_matrices[i].astype(np.float32))
+        for j in range(microstate.shape[0]):
+            neighbors_set[i*microstate.shape[0]+j, :, :] = np.vstack((microstate[:j, :],
+                                                                      micro_rot[j:, :]))
+    return neighbors_set
+
+
+# @nb.njit(fastmath=True, parallel=True)
+def get_allowed_neighborhs(microstate):
+    """
+    This funcion gets the allowed neighbors for a given
+    polymer matrix
+
+    Parameters:
+    -----------
+    aminoacid_matrix : ndarray
+        Numpy array containing the polymer matrix
+
+    Returns:
+    --------
+    allowed_neighbors : ndarray
+        Array with the selected neigborhs
+    """
+
+    allowed_neighborhs = []
+    for i in range(microstate.shape[0]):
+        complete_matrix = np.vstack((np.array([[0, 0], [1, 0]]), microstate[i]))
+        coord_matrix = np.empty(complete_matrix.shape)
+        for j in range(complete_matrix.shape[1]):
+            coord_matrix[:, j] = np.cumsum(complete_matrix[:, j])
+        x_mat = np.random.rand(coord_matrix.shape[1])
+        y_mat = coord_matrix.dot(x_mat)
+        unique = np.unique(y_mat)
+        if unique.shape[0] == coord_matrix.shape[0]:
+            allowed_neighborhs.append(microstate[i])
+
+    return allowed_neighborhs
 
 
 # @nb.njit(fastmath=True)
@@ -161,33 +184,12 @@ def create_new_microstate(microstate, rot_matrices):
 
 
 # @nb.njit(fastmath=True, parallel=True)
-def find_neighbors(microstate, rot_matrices):
-    """
-    Find the neighbors for a given microstate
-
-    Parameters:
-    -----------
-    microstate : ndarray
-        A matrix with the current microstate
-    rot_matrices : list
-        A list with the rotation matrices
-    """
-
-    neighbors_set = np.empty((microstate.shape[0]*len(rot_matrices), microstate.shape[0],
-                         microstate.shape[1]), dtype=np.float32)
-    for i in range(rot_matrices.shape[0]):
-        micro_rot = np.dot(microstate.astype(np.float32), rot_matrices[i].astype(np.float32))
-        for j in range(microstate.shape[0]):
-            neighbors_set[i*microstate.shape[0]+j, :, :] = np.vstack((microstate[:j, :],
-                                                                      micro_rot[j:, :]))
-    return neighbors_set
-
-
-# @nb.njit(fastmath=True, parallel=True)
 def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta, matrix_l):
     """
     X-old microstate, Y-new microstate
     """
+
+    num_adj_h = num_adjacent_h(matrix_l)
 
     microstates = np.empty((steps, microstate_x.shape[0], microstate_x.shape[1]), dtype=np.float32)
     n_of_contacts = np.empty(steps)
@@ -195,11 +197,11 @@ def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta,
     i = 0
     while i < steps:
 
-        n_contacts_x, energy_x = calc_energy(microstate_x, delta, matrix_l)
+        n_contacts_x, energy_x = calc_energy(microstate_x, delta, matrix_l, num_adj_h)
 
         n_neighbors_x, microstate_y = create_new_microstate(microstate_x, rotate_matrices)
 
-        n_contacts_y, energy_y = calc_energy(microstate_y, delta, matrix_l)
+        n_contacts_y, energy_y = calc_energy(microstate_y, delta, matrix_l, num_adj_h)
 
         n_neighbors_y, _ = create_new_microstate(microstate_y, rotate_matrices)
 
