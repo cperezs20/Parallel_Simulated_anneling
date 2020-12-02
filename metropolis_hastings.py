@@ -62,7 +62,7 @@ def num_adjacent_h(seq_matrix):
     return counter
 
 
-@nb.njit
+# @nb.njit
 def num_contacts(microstate, seq_matrix):
     """
     Function to count the number of contacts
@@ -91,9 +91,8 @@ def num_contacts(microstate, seq_matrix):
 
     m_logic = np.argwhere(seq_matrix == "H")
     m_hydro = np.empty((m_logic.shape[0], 2))
-
-    for _, idx in enumerate(m_logic):
-        m_hydro = coord_matrix[idx, :]
+    for i, idx in enumerate(m_logic):
+        m_hydro[i] = coord_matrix[idx, :]
 
     for i in range(right_up.shape[0]):
         m_moved = m_hydro + right_up[i]
@@ -101,9 +100,9 @@ def num_contacts(microstate, seq_matrix):
         x_mat = np.random.rand(aux.shape[1])
         y_mat = coord_matrix.dot(x_mat)
         m_wspolna = np.unique(y_mat)
-        print(m_wspolna.shape[0])
+        #print(m_hydro.shape[0], m_moved.shape[0], m_wspolna.shape[0])
         acum += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
-
+    print(acum)
     return acum
 
 # def number_of_contacts(a,matrix_l):
@@ -123,7 +122,7 @@ def num_contacts(microstate, seq_matrix):
 #         d += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
 #     return d
 
-@nb.njit
+# @nb.njit
 def calc_energy(microstate, delta, seq_matrix):
     """
     Function to compute the energy of a given microstate
