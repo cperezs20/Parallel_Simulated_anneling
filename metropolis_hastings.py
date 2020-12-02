@@ -100,6 +100,7 @@ def num_contacts(microstate, seq_matrix):
         x_mat = np.random.rand(aux.shape[1])
         y_mat = aux.dot(x_mat)
         m_wspolna = np.unique(y_mat)
+        print(m_wspolna.shape[0])
         acum += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
     return acum
 
