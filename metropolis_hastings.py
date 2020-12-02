@@ -38,7 +38,7 @@ def get_allowed_neighborhs(microstate):
     return allowed_neighborhs
 
 
-@nb.njit
+@nb.njit(fastmath=True)
 def num_adjacent_h(seq_matrix):
     """
     Function to count occurences where two H are adjacent
@@ -62,7 +62,7 @@ def num_adjacent_h(seq_matrix):
     return counter
 
 
-@nb.njit
+@nb.njit(fastmath=True, parallel=True)
 def num_contacts(microstate, seq_matrix):
     """
     Function to count the number of contacts
@@ -100,12 +100,11 @@ def num_contacts(microstate, seq_matrix):
         x_mat = np.random.rand(aux.shape[1])
         y_mat = aux.dot(x_mat)
         m_wspolna = np.unique(y_mat)
-        print(m_hydro.shape[0], m_moved.shape[0], m_wspolna.shape[0])
         acum += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
-    #print(acum)
     return acum
 
-@nb.njit
+
+@nb.njit(fastmath=True)
 def calc_energy(microstate, delta, seq_matrix):
     """
     Function to compute the energy of a given microstate
@@ -131,7 +130,7 @@ def calc_energy(microstate, delta, seq_matrix):
     return n_contact, energy
 
 
-@nb.njit
+@nb.njit(fastmath=True)
 def create_new_microstate(microstate, rot_matrices):
     """
     Function to create a new random microstate
@@ -161,7 +160,7 @@ def create_new_microstate(microstate, rot_matrices):
     return len(neighbors_allowed), neighbors_allowed[int(idx)]
 
 
-@nb.njit
+@nb.njit(fastmath=True, parallel=True)
 def find_neighbors(microstate, rot_matrices):
     """
     Find the neighbors for a given microstate
@@ -184,13 +183,13 @@ def find_neighbors(microstate, rot_matrices):
     return neighbors_set
 
 
-# @nb.njit
+@nb.njit(fastmath=True, parallel=True)
 def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta, matrix_l):
     """
     X-old microstate, Y-new microstate
     """
 
-    microstates = np.empty((steps, microstate_x.shape[0], microstate_x.shape[1]))
+    microstates = np.empty((steps, microstate_x.shape[0], microstate_x.shape[1]), dtype=np.float32)
     n_of_contacts = np.empty(steps)
     energy = np.empty(steps)
     i = 0

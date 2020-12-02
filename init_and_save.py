@@ -44,10 +44,11 @@ def initialization(amino_seq):
     """
 
     #Parse string in uppercase letters
-    matrix_polymer = np.array(list(amino_seq.upper()))
+    matrix_polymer = np.array(list(amino_seq.upper()), dtype=str)
 
     #Creating initial microstate using the aminoacid sequence
-    init_microstate = np.array((1, 0)*(len(amino_seq)-2)).reshape((len(amino_seq)-2, 2))
+    init_microstate = np.array((1, 0)*(len(amino_seq)-2),
+                               dtype=np.float32).reshape((len(amino_seq)-2, 2))
 
     #Generating rotations matrices for 90, 180 and 270 degrees
     rotation_matrices = np.empty((3,2,2))
