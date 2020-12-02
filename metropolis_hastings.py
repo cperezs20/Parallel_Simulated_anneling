@@ -98,6 +98,7 @@ def calc_energy(microstate, delta, seq_matrix, adj_h):
 
     return n_contact, energy
 
+
 # @nb.njit(fastmath=True, parallel=True)
 def find_neighbors(microstate, rot_matrices):
     """
@@ -186,7 +187,31 @@ def create_new_microstate(microstate, rot_matrices):
 # @nb.njit(fastmath=True, parallel=True)
 def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta, matrix_l):
     """
-    X-old microstate, Y-new microstate
+    Computes the metropolis hasting rule to obtain a new microstate
+
+    Parameters:
+    -----------
+    steps : int
+        Total number of steps/iterations
+    temperature : float
+        Current temperature
+    microstate_x : ndarray
+        Array containing the current microstate
+    rotate_matrices : ndarray
+        Array contaning the rotation matrices
+    delta : float
+        Delta used for getting the neighborhs
+    seq_matrix : ndarray
+        Matrix with sequence
+
+    Returns:
+    --------
+    microstates : ndarray
+        Array with the computed microstates for each step
+    n_of_contacts : ndarray
+        Array with the number of contacts for each step
+    energy : ndarray
+        Array with the energies for each step
     """
 
     num_adj_h = num_adjacent_h(matrix_l)
