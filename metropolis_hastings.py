@@ -2,11 +2,7 @@
 Metropolis-Hastings algorithm implementation
 """
 
-import numba as nb
 import numpy as np
-import itertools
-
-
 
 
 def absolute_coordinates(a): 
@@ -29,29 +25,7 @@ def is_shape_allowed(a):
 
 def check_allowed_neighbors(l):
     return [neighbor for neighbor in l if is_shape_allowed(neighbor)]
-"""
 
-@nb.jit(nopython=True) 
-def check_allowed_neighbors(l, iterator):
-    l = nb.typed.List(l)
-    iterator = nb.typed.List(iterator)
-    neighbor_list = nb.typed.List()
-    for neighbor in l:
-        mat_neighbor = np.vstack((np.array([[0, 0], [1, 0]]), neighbor))
-        cum_list = nb.typed.List()
-        for col in range(mat_neighbor.shape[1]):
-            cum_list.append(nb.typed.List(np.cumsum(mat_neighbor[:, col]))[0])
-        print(mat_neighbor)
-        mat_neighbor = np.array(cum_list).T
-        allowed_shape = True
-        for i, j in iterator:
-            if np.array_equal(mat_neighbor[i, :], mat_neighbor[j, :]):
-                allowed_shape = False
-                break
-        if allowed_shape:
-            neighbor_list.append(neighbor)
-    return neighbor_list
-"""
     
 def number_of_contacts(a, matrix_l):
     d = 0
@@ -97,29 +71,28 @@ def create_new_microstate(microstate,Lmacierzy):
     return len(neighbors_allowed),neighbors_allowed[m]
     
 
-#def generate_neighbors(macierz_przek, a): #a = microstate
-#    """
-#    for the rotate matrix generating all possible next microstates
-#    """
-#    s=[]
-#    ma = a * macierz_przek
-#    for i in range(a.shape[0]):
-#        s.append(np.vstack((a[:i, :],
-#                        ma[i:, :])))
-#    return s
+def generate_neighbors(macierz_przek, a): #a = microstate
+    """
+    for the rotate matrix generating all possible next microstates
+    """
+    s=[]
+    ma = a * macierz_przek
+    for i in range(a.shape[0]):
+        s.append(np.vstack((a[:i, :],
+                        ma[i:, :])))
+    return s
+
+def neighbors(a, rotate_matrices):
+    """
+    generating all possible next microstates for microstate a
+    """
+    l=[]
+    for macierz_przek in rotate_matrices:
+        s = generate_neighbors(macierz_przek, a) #a = microstate
+        l += s
+    return l
 
 
-#def neighbors(a, rotate_matrices):
-#    """
-#    generating all possible next microstates for microstate a
-#    """
-#    l=[]
-#    for macierz_przek in rotate_matrices:
-#        s = generate_neighbors(macierz_przek, a) #a = microstate
-#        l += s
-#    return l
-
-@nb.jit(nopython=True)
 def neighbors(microstate,rot_matrices):
     neighbors_set = list()
     for rot_matrix in rot_matrices:
