@@ -223,7 +223,7 @@ def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta,
     for i in range(steps):
 
         n_contacts_x, energy_x = calc_energy(microstate_x, delta, seq_matrix, num_adj_h)
-        print(energy_x)
+
         n_neighbors_x, microstate_y = create_new_microstate(microstate_x, rotate_matrices)
 
         n_contacts_y, energy_y = calc_energy(microstate_y, delta, seq_matrix, num_adj_h)
