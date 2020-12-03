@@ -9,7 +9,7 @@ def rotation_matrix(alfa):
     """
     Function to create the rotation matrix
 
-    Paramters:
+    Parameters:
     ---------
     alpha : float
         Angle in radians
