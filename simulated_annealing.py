@@ -22,7 +22,7 @@ SEQUENCE = "HPPPHHPPHPHHHHHH"
 K = 10       #number of steps of the Metropolis-Hastings algorithm
 KB = 1          #Boltzman constant
 TMAX = 1        #initial temperature
-TMIN = 0.15     #final temperature
+TMIN = 0.95     #final temperature
 DELTA = 1       #constant used during calculating energy for each microstate
 ALPHA = 0.05     #temperature will decrease by alfa
 

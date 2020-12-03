@@ -49,7 +49,7 @@ def num_contacts(microstate, seq_matrix):
     """
 
     acum = 0
-    right_up = np.array([[1,0], [0, 1]])
+    right_up = np.array([[1, 0], [0, 1]])
     complete_matrix = np.vstack((np.array([[0, 0], [1, 0]]), microstate))
     #calculation of absolute coordinates in 2D
     #i.e. adding two first rows to current matrix and cumsum on it
@@ -93,7 +93,7 @@ def calc_energy(microstate, delta, seq_matrix, adj_h):
         Energy of the given microstate
     """
 
-    n_contact = adj_h-num_contacts(microstate, seq_matrix)
+    n_contact = num_contacts(microstate, seq_matrix)-adj_h
     energy = -1*delta*n_contact
 
     return n_contact, energy
