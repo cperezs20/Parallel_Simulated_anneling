@@ -2,11 +2,11 @@
 Metropolis-Hastings algorithm implementation
 """
 
-import numba as nb
 import numpy as np
+from numba import prange
+from numba import njit
 
-
-@nb.njit(fastmath=True)
+@njit(fastmath=True, parallel=True)
 def num_adjacent_h(seq_matrix):
     """
     Function to count occurences where two H are adjacent
@@ -23,14 +23,14 @@ def num_adjacent_h(seq_matrix):
     """
 
     counter = 0
-    for i in range(len(seq_matrix)-1):
+    for i in prange(len(seq_matrix)-1):
         if seq_matrix[i] == "H" and seq_matrix[i+1] == "H":
             counter += 1
 
     return counter
 
 
-#@nb.njit(fastmath=True, parallel=True)
+@njit(fastmath=True, parallel=True)
 def num_contacts(microstate, seq_matrix):
     """
     Function to count the number of contacts
@@ -54,26 +54,26 @@ def num_contacts(microstate, seq_matrix):
     #calculation of absolute coordinates in 2D
     #i.e. adding two first rows to current matrix and cumsum on it
     coord_matrix = np.empty(complete_matrix.shape)
-    for j in range(complete_matrix.shape[1]):
+    for j in prange(complete_matrix.shape[1]):
         coord_matrix[:, j] = np.cumsum(complete_matrix[:, j])
 
     m_logic = [idx for idx, element in enumerate(seq_matrix) if element == 'H']
     m_hydro = np.empty((len(m_logic), 2))
-    for i, idx in enumerate(m_logic):
-        m_hydro[i] = coord_matrix[idx, :]
+    for i in prange(len(m_logic)):
+        m_hydro[i] = coord_matrix[m_logic[i], :]
 
-    for i in range(right_up.shape[0]):
+    for i in prange(right_up.shape[0]):
         m_moved = m_hydro + right_up[i]
         aux = np.vstack((m_hydro, m_moved))
         x_mat = np.random.rand(aux.shape[1])
         y_mat = aux.dot(x_mat)
         m_wspolna = np.unique(y_mat)
         acum += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
-    print(acum)
+    #print(acum)
     return acum
 
 
-# @nb.njit(fastmath=True)
+@njit(fastmath=True)
 def calc_energy(microstate, delta, seq_matrix, adj_h):
     """
     Function to compute the energy of a given microstate
@@ -99,7 +99,7 @@ def calc_energy(microstate, delta, seq_matrix, adj_h):
     return n_contact, energy
 
 
-# @nb.njit(fastmath=True, parallel=True)
+@njit(fastmath=True, parallel=True)
 def find_neighbors(microstate, rot_matrices):
     """
     Find the neighbors for a given microstate
@@ -114,15 +114,15 @@ def find_neighbors(microstate, rot_matrices):
 
     neighbors_set = np.empty((microstate.shape[0]*len(rot_matrices), microstate.shape[0],
                          microstate.shape[1]), dtype=np.float32)
-    for i in range(rot_matrices.shape[0]):
+    for i in prange(rot_matrices.shape[0]):
         micro_rot = np.dot(microstate.astype(np.float32), rot_matrices[i].astype(np.float32))
-        for j in range(microstate.shape[0]):
+        for j in prange(microstate.shape[0]):
             neighbors_set[i*microstate.shape[0]+j, :, :] = np.vstack((microstate[:j, :],
                                                                       micro_rot[j:, :]))
     return neighbors_set
 
 
-# @nb.njit(fastmath=True, parallel=True)
+@njit(fastmath=True, nogil=True)
 def get_allowed_neighborhs(microstate):
     """
     This funcion gets the allowed neighbors for a given
@@ -143,7 +143,7 @@ def get_allowed_neighborhs(microstate):
     for i in range(microstate.shape[0]):
         complete_matrix = np.vstack((np.array([[0, 0], [1, 0]]), microstate[i]))
         coord_matrix = np.empty(complete_matrix.shape)
-        for j in range(complete_matrix.shape[1]):
+        for j in prange(complete_matrix.shape[1]):
             coord_matrix[:, j] = np.cumsum(complete_matrix[:, j])
         x_mat = np.random.rand(coord_matrix.shape[1])
         y_mat = coord_matrix.dot(x_mat)
@@ -154,7 +154,7 @@ def get_allowed_neighborhs(microstate):
     return allowed_neighborhs
 
 
-# @nb.njit(fastmath=True)
+@njit(fastmath=True)
 def create_new_microstate(microstate, rot_matrices):
     """
     Function to create a new random microstate
@@ -184,8 +184,8 @@ def create_new_microstate(microstate, rot_matrices):
     return len(neighbors_allowed), neighbors_allowed[int(idx)]
 
 
-# @nb.njit(fastmath=True, parallel=True)
-def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta, matrix_l):
+@njit(fastmath=True)
+def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta, seq_matrix):
     """
     Computes the metropolis hasting rule to obtain a new microstate
 
@@ -214,19 +214,19 @@ def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta,
         Array with the energies for each step
     """
 
-    num_adj_h = num_adjacent_h(matrix_l)
+    num_adj_h = num_adjacent_h(seq_matrix)
 
     microstates = np.empty((steps, microstate_x.shape[0], microstate_x.shape[1]), dtype=np.float32)
     n_of_contacts = np.empty(steps)
     energy = np.empty(steps)
-    i = 0
-    while i < steps:
 
-        n_contacts_x, energy_x = calc_energy(microstate_x, delta, matrix_l, num_adj_h)
+    for i in range(steps):
+
+        n_contacts_x, energy_x = calc_energy(microstate_x, delta, seq_matrix, num_adj_h)
 
         n_neighbors_x, microstate_y = create_new_microstate(microstate_x, rotate_matrices)
 
-        n_contacts_y, energy_y = calc_energy(microstate_y, delta, matrix_l, num_adj_h)
+        n_contacts_y, energy_y = calc_energy(microstate_y, delta, seq_matrix, num_adj_h)
 
         n_neighbors_y, _ = create_new_microstate(microstate_y, rotate_matrices)
 
@@ -246,6 +246,5 @@ def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta,
             microstates[i] = microstate_x
             n_of_contacts[i] = n_contacts_x
             energy[i] = energy_x
-        i += 1
 
     return microstates, n_of_contacts, energy

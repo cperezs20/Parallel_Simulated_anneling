@@ -15,10 +15,11 @@ start = time()
 
 ## polymer based on HP model (hydrophobic-polar protein folding model)
 #SEQUENCE="PHPPHPPHHPPHHPPHPPHP"
-SEQUENCE = "HPPPHHPPHPHHHHHH"
+#SEQUENCE = "HPPPHHPPHPHHHHHH"
 #SEQUENCE= "HPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPH"
+SEQUENCE= "HPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPHHPPPHHPPHPHHHHHHPPHPPPHHPHPPPHPHPHHHPPHPHHPH"
 
-K = 10       #number of steps of the Metropolis-Hastings algorithm
+K = 1000       #number of steps of the Metropolis-Hastings algorithm
 KB = 1          #Boltzman constant
 TMAX = 1        #initial temperature
 TMIN = 0.15     #final temperature
