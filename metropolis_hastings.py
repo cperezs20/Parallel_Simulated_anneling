@@ -65,7 +65,7 @@ def count_energy(microstate, delta, matrix_l):
     
 
 def create_new_microstate(microstate,Lmacierzy):
-    neighbors1 = neighbors(microstate,nb.typed.List(Lmacierzy))
+    neighbors1 = neighbors(microstate,Lmacierzy)
     neighbors_allowed = check_allowed_neighbors(neighbors1)
     m = np.random.random_integers(0,len(neighbors_allowed)-1)
     return len(neighbors_allowed),neighbors_allowed[m]
