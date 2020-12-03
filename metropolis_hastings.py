@@ -6,7 +6,7 @@ import numpy as np
 from numba import prange
 from numba import njit
 
-@njit(fastmath=True, parallel=True)
+@njit(fastmath=True)
 def num_adjacent_h(seq_matrix):
     """
     Function to count occurences where two H are adjacent
@@ -23,7 +23,7 @@ def num_adjacent_h(seq_matrix):
     """
 
     counter = 0
-    for i in prange(len(seq_matrix)-1):
+    for i in range(len(seq_matrix)-1):
         if seq_matrix[i] == "H" and seq_matrix[i+1] == "H":
             counter += 1
 
@@ -69,7 +69,7 @@ def num_contacts(microstate, seq_matrix):
         y_mat = aux.dot(x_mat)
         m_wspolna = np.unique(y_mat)
         acum += (m_hydro.shape[0] + m_moved.shape[0]) - m_wspolna.shape[0]
-    #print(acum)
+
     return acum
 
 
@@ -114,7 +114,7 @@ def find_neighbors(microstate, rot_matrices):
 
     neighbors_set = np.empty((microstate.shape[0]*len(rot_matrices), microstate.shape[0],
                          microstate.shape[1]), dtype=np.float32)
-    for i in prange(rot_matrices.shape[0]):
+    for i in range(rot_matrices.shape[0]):
         micro_rot = np.dot(microstate.astype(np.float32), rot_matrices[i].astype(np.float32))
         for j in prange(microstate.shape[0]):
             neighbors_set[i*microstate.shape[0]+j, :, :] = np.vstack((microstate[:j, :],
@@ -223,7 +223,7 @@ def metropolis_hasting(steps, temperature, microstate_x, rotate_matrices, delta,
     for i in range(steps):
 
         n_contacts_x, energy_x = calc_energy(microstate_x, delta, seq_matrix, num_adj_h)
-
+        print(energy_x)
         n_neighbors_x, microstate_y = create_new_microstate(microstate_x, rotate_matrices)
 
         n_contacts_y, energy_y = calc_energy(microstate_y, delta, seq_matrix, num_adj_h)
